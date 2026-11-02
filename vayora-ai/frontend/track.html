@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Follow a trip | VAYORA AI</title>
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="css/app.css">
+<style>body{display:grid;grid-template-rows:auto 1fr;height:100dvh}#tmap{min-height:0}.bar{padding:14px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line);background:var(--bg2)}</style></head>
+<body>
+<div class="bar"><b style="font-size:18px">VAYORA AI live trip</b><span class="chip" id="st">Loading…</span><span id="who"></span><span class="muted sm" id="ago"></span><a class="btn sm" href="index.html" style="margin-left:auto">Open VAYORA AI</a></div>
+<div id="tmap"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const id = new URLSearchParams(location.search).get('id');
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+const map = L.map('tmap').setView([28.61, 77.21], 12);
+L.tileLayer(dark ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19, attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }).addTo(map);
+let marker = null, drawn = false;
+async function tick() {
+  try {
+    const r = await fetch('/api/trips/' + encodeURIComponent(id)); if (!r.ok) throw new Error(r.status === 404 ? 'This trip link is not valid.' : 'Server error');
+    const t = await r.json();
+    document.getElementById('who').textContent = t.name + ' → ' + ((t.route && t.route.destination) || '').split(',')[0];
+    if (!drawn && t.route && t.route.polyline) { const pl = L.polyline(t.route.polyline, { color: '#6c4cf5', weight: 6, opacity: .8 }).addTo(map); map.fitBounds(pl.getBounds(), { padding: [40, 40] }); drawn = true; }
+    const st = document.getElementById('st'); st.textContent = t.status === 'arrived' ? 'Arrived safely' : t.status === 'check' ? 'Safety check sent' : t.last_ts ? 'On the way' : 'Waiting for first location';
+    st.className = 'chip ' + (t.status === 'arrived' ? 'ok' : t.status === 'check' ? 'bad' : 'mid');
+    if (t.last_lat != null) { const p = [t.last_lat, t.last_lng]; if (!marker) marker = L.circleMarker(p, { radius: 10, color: '#fff', weight: 3, fillColor: '#2d7ff9', fillOpacity: 1 }).addTo(map); else marker.setLatLng(p);
+      document.getElementById('ago').textContent = 'Updated ' + Math.max(0, Math.round(Date.now() / 1000 - t.last_ts)) + ' s ago'; }
+  } catch (e) { document.getElementById('st').textContent = e.message; document.getElementById('st').className = 'chip bad'; }
+}
+if (!id) document.getElementById('st').textContent = 'Missing trip id'; else { tick(); setInterval(tick, 5000); }
+</script></body></html>

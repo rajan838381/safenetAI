@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard | VAYORA AI</title>
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="css/app.css">
+<style>.wrap{padding:22px 18px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}.card b{font-size:28px;display:block}.two{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}#amap{height:380px;border-radius:18px;border:1px solid var(--line)}table{width:100%;border-collapse:collapse;font-size:13.5px}td,th{padding:8px;border-bottom:1px solid var(--line);text-align:left}@media(max-width:800px){.two{grid-template-columns:1fr}}</style></head>
+<body>
+<header id="nav"><a class="brand" href="index.html" style="text-decoration:none;color:inherit">VAYORA AI</a><span class="muted">Institution dashboard</span><div class="sp"></div><a class="btn sm" href="index.html">Back to app</a></header>
+<div class="wrap" style="max-width:1180px;margin:0 auto">
+<h1 style="font-size:28px">Safety and air overview</h1>
+<p class="muted">Anonymous statistics from journeys, community reports and SOS events on this server. Useful for campuses, cab fleets and city teams.</p>
+<div class="cards" id="cards"></div>
+<div class="two"><div><h3 style="margin-bottom:8px">Community reports and SOS map</h3><div id="amap"></div></div>
+<div><h3 style="margin-bottom:8px">Reports by category</h3><canvas class="chart" id="cCat" style="height:170px"></canvas><h3 style="margin:14px 0 8px">Journeys by hour of day</h3><canvas class="chart" id="cHour" style="height:170px"></canvas></div></div>
+<h3 style="margin:22px 0 8px">Recent SOS events</h3><div class="card"><table id="sosT"><thead><tr><th>When</th><th>Name</th><th>Reason</th><th>Location</th></tr></thead><tbody></tbody></table></div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const CAT = { poor_lighting: 'Poor lighting', harassment: 'Harassment', unsafe_crowd: 'Unsafe crowd', isolated: 'Isolated', road_hazard: 'Road hazard', pollution_source: 'Smoke/dust', other: 'Other' };
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function bars(cv, labels, vals, color) {
+  const dpr = Math.min(2, devicePixelRatio || 1), w = cv.clientWidth, h = cv.clientHeight; cv.width = w * dpr; cv.height = h * dpr;
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  const cs = getComputedStyle(document.documentElement), mut = cs.getPropertyValue('--muted').trim() || '#888';
+  if (!vals.length) { g.fillStyle = mut; g.font = '13px sans-serif'; g.fillText('No data yet', 10, 30); return; }
+  const max = Math.max(...vals, 1), bw = (w - 20) / vals.length;
+  vals.forEach((v, i) => { const bh = (h - 30) * v / max; g.fillStyle = color; g.fillRect(10 + i * bw + 3, h - 18 - bh, bw - 6, bh); g.fillStyle = mut; g.font = '10px sans-serif'; g.textAlign = 'center'; g.fillText(labels[i], 10 + i * bw + bw / 2, h - 5); });
+}
+(async () => {
+  const a = await (await fetch('/api/analytics')).json(), t = a.totals;
+  const items = [['Journeys analysed', t.journeys || 0], ['Average combined risk', t.avg_risk != null ? Math.round(t.avg_risk) : '-'], ['Distance planned (km)', Math.round(t.km || 0)], ['Community reports', t.reports], ['Shared trips', t.shared_trips], ['SOS events', t.sos]];
+  document.getElementById('cards').innerHTML = items.map(([k, v]) => '<div class="card"><b>' + v + '</b><span class="muted sm">' + k + '</span></div>').join('');
+  bars(document.getElementById('cCat'), a.reports_by_category.map(x => (CAT[x.category] || x.category).slice(0, 9)), a.reports_by_category.map(x => x.n), '#6c4cf5');
+  const hrs = Array.from({ length: 24 }, (_, i) => i), byH = Object.fromEntries(a.journeys_by_hour.map(x => [x.hour, x.n]));
+  bars(document.getElementById('cHour'), hrs.map(h => h % 6 === 0 ? h : ''), hrs.map(h => byH[h] || 0), '#17c3b2');
+  const map = L.map('amap').setView([28.61, 77.21], 11);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19, attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }).addTo(map);
+  const pts = [];
+  a.report_points.forEach(p => { pts.push([p.lat, p.lng]); L.circleMarker([p.lat, p.lng], { radius: 5 + p.severity * 2, color: '#fff', weight: 1.5, fillColor: '#f2546f', fillOpacity: .75 }).addTo(map).bindPopup('<b>' + esc(CAT[p.category] || p.category) + '</b><br>Severity ' + p.severity + '/3<br>' + esc(p.note || '')); });
+  a.recent_sos.forEach(p => { pts.push([p.lat, p.lng]); L.circleMarker([p.lat, p.lng], { radius: 9, color: '#000', weight: 2, fillColor: '#ffcc00', fillOpacity: 1 }).addTo(map).bindPopup('<b>SOS</b><br>' + esc(p.reason)); });
+  if (pts.length) map.fitBounds(pts, { padding: [30, 30], maxZoom: 15 });
+  document.querySelector('#sosT tbody').innerHTML = a.recent_sos.map(s => '<tr><td>' + new Date(s.created_at * 1000).toLocaleString() + '</td><td>' + esc(s.name) + '</td><td>' + esc(s.reason) + '</td><td>' + s.lat.toFixed(4) + ', ' + s.lng.toFixed(4) + '</td></tr>').join('') || '<tr><td colspan="4" class="muted">No SOS events yet.</td></tr>';
+})();
+</script></body></html>

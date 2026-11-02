@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VAYORA AI | Safer routes. Cleaner journeys.</title>
+<meta name="description" content="VAYORA AI compares routes between any two places on personal safety and air pollution, and tells you why.">
+<meta name="theme-color" content="#6c4cf5">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header id="nav">
+  <button class="brand" data-go="home" aria-label="VAYORA AI home">
+    <svg viewBox="0 0 34 34" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6c4cf5"/><stop offset="1" stop-color="#17c3b2"/></linearGradient></defs><circle cx="17" cy="17" r="15" fill="none" stroke="url(#lg)" stroke-width="2.4"/><path d="M7 20c3-6 6-6 10 0s7 6 10 0" fill="none" stroke="url(#lg)" stroke-width="2.4" stroke-linecap="round"/><circle cx="17" cy="10.5" r="2.5" fill="url(#lg)"/></svg>
+    VAYORA AI
+  </button>
+  <nav class="links" aria-label="Main">
+    <button data-go="home" class="on">Home</button>
+    <button data-go="app">Plan a journey</button>
+    <button data-go="how">How it works</button>
+    <a href="admin.html">Dashboard</a>
+  </nav>
+  <div class="sp"></div>
+  <button class="btn primary sm" data-go="app">Start now</button>
+  <button class="ibtn" id="settingsBtn" aria-label="Settings and API keys"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></button>
+  <button class="ibtn" id="themeBtn" aria-label="Switch light or dark theme"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 010 16z" fill="currentColor"/></svg></button>
+</header>
+
+<main id="home">
+  <section class="hero"><div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <span class="pill"><i></i> Live air quality, street data and local news</span>
+        <h1>Pick the route that is <span class="grad">safer to walk</span> and <span class="grad">cleaner to breathe.</span></h1>
+        <p class="lead">Enter any start and any destination. VAYORA AI compares up to three routes on street lighting, open places, police and hospitals, real-time PM2.5 and travel time, then explains why one route wins.</p>
+        <div class="cta"><button class="btn primary" data-go="app">Plan a journey</button><button class="btn" data-go="how">See how it works</button></div>
+        <div class="stats">
+          <div class="stat"><b>Any place</b><span>Start and end anywhere, worldwide</span></div>
+          <div class="stat"><b>3 routes</b><span>Compared on safety, air, time</span></div>
+          <div class="stat"><b>12 hours</b><span>Best time to leave forecast</span></div>
+          <div class="stat"><b>1 tap</b><span>SOS with live location</span></div>
+        </div>
+      </div>
+      <div class="orb" id="orb" aria-hidden="true">
+        <canvas id="hero3d"></canvas>
+        <div class="float-card" style="left:2%;top:12%"><span>Safety risk</span><b>Low</b></div>
+        <div class="float-card" style="right:0;top:34%;animation-delay:-1.5s"><span>PM2.5 on route</span><b>38 µg/m³</b></div>
+        <div class="float-card" style="left:10%;bottom:8%;animation-delay:-3s"><span>Best time to leave</span><b>In 2 hours</b></div>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="block"><div class="wrap">
+    <div class="sec-h"><h2>Everything a safe journey needs</h2><p>Built for students, commuters and anyone who travels after dark or through polluted streets.</p></div>
+    <div class="grid3" id="featGrid">
+      <div class="feat" data-tilt><div class="ic">🧭</div><h3>Any start, any destination</h3><p>Search with autocomplete, use your location, or tap the map. Walk, cycle, scooter or cab.</p></div>
+      <div class="feat" data-tilt><div class="ic">🛡️</div><h3>Street-level safety score</h3><p>Lamps, open late shops, police and hospitals, isolated land and real sunset times from OpenStreetMap.</p></div>
+      <div class="feat" data-tilt><div class="ic">🌫️</div><h3>Pollution where you walk</h3><p>PM2.5 forecast at the exact place and hour you will be there, adjusted for how you travel.</p></div>
+      <div class="feat" data-tilt><div class="ic">🐟</div><h3>TinyFish live safety intel</h3><p>TinyFish searches fresh local news and civic notices, and a web agent extracts structured facts.</p></div>
+      <div class="feat" data-tilt><div class="ic">⏱️</div><h3>Best time to leave</h3><p>See how risk changes over the next 12 hours and leave when the combined risk is lowest.</p></div>
+      <div class="feat" data-tilt><div class="ic">📍</div><h3>Live journey and trip sharing</h3><p>GPS tracking, route deviation check, and a link your family can open to follow you.</p></div>
+      <div class="feat" data-tilt><div class="ic">🆘</div><h3>SOS that works offline too</h3><p>Cancel window, text and WhatsApp with your location, 112 call, and optional SMS through Twilio.</p></div>
+      <div class="feat" data-tilt><div class="ic">👥</div><h3>Community reports</h3><p>Report poor lighting or harassment spots. Reports raise the risk on nearby routes and fade over time.</p></div>
+      <div class="feat" data-tilt><div class="ic">📊</div><h3>Institution dashboard</h3><p>Campuses, cab fleets and city teams see hotspots, report trends and journey risk by hour.</p></div>
+    </div>
+  </div></section>
+
+  <section class="block" id="how"><div class="wrap">
+    <div class="sec-h"><h2>How VAYORA AI decides</h2><p>No black box. Every score can be traced to data you can see.</p></div>
+    <div class="steps">
+      <div class="step"><h3>Find routes</h3><p class="muted sm">Google Maps Routes API (or OpenStreetMap) returns up to three real routes.</p></div>
+      <div class="step"><h3>Read the street</h3><p class="muted sm">Overpass scans lamps, open places, police, hospitals and remote land along each route.</p></div>
+      <div class="step"><h3>Check the air and the news</h3><p class="muted sm">Open-Meteo gives PM2.5 by hour. TinyFish adds fresh local advisories and incidents.</p></div>
+      <div class="step"><h3>Score and explain</h3><p class="muted sm">Safety, pollution and time combine with your weights. You get reasons, not just a number.</p></div>
+    </div>
+    <div class="band" style="margin-top:34px">
+      <div><h2>Powered by the TinyFish API</h2><p>Safety changes by the day: a closed road, a streetlight outage, a news report from last night. Static maps cannot see that. VAYORA uses three TinyFish APIs to keep every route analysis fresh.</p></div>
+      <ul><li><b>Search API</b> finds fresh local news and advisories for your route area</li><li><b>Fetch API</b> reads the full article text for context</li><li><b>Agent API</b> opens a page and extracts structured incident data</li></ul>
+    </div>
+    <p class="sm muted" style="text-align:center;margin-top:22px">Prototype notice: safety scores are explainable estimates built from open data, not guarantees. Always trust your instincts and local emergency services.</p>
+  </div></section>
+  <footer>VAYORA AI · Safer routes. Cleaner journeys.</footer>
+</main>
+
+<div id="app" hidden>
+  <aside id="panel">
+    <div id="tabs" role="tablist">
+      <button class="on" data-tab="plan">Plan</button><button data-tab="live">Live</button><button data-tab="intel">TinyFish intel</button><button data-tab="report">Report</button><button data-tab="settings">Settings</button>
+    </div>
+
+    <div class="pane" id="pane-plan">
+      <div class="field"><label for="from">From</label>
+        <div class="inrow"><input id="from" type="text" placeholder="Search any place or address" autocomplete="off"><button class="ibtn" id="locFrom" title="Use my location" aria-label="Use my location"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></svg></button><button class="ibtn" id="pickFrom" title="Pick on map" aria-label="Pick start on map"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-12a7 7 0 10-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg></button></div>
+        <div class="sug" id="fromList" hidden></div></div>
+      <div style="text-align:center;margin:-4px 0 4px"><button class="btn sm" id="swap" aria-label="Swap start and destination">⇅ Swap</button></div>
+      <div class="field"><label for="to">To</label>
+        <div class="inrow"><input id="to" type="text" placeholder="Search any place or address" autocomplete="off"><button class="ibtn" id="pickTo" title="Pick on map" aria-label="Pick destination on map"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-12a7 7 0 10-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg></button></div>
+        <div class="sug" id="toList" hidden></div></div>
+      <div class="field" id="savedWrap"><label>Saved places</label><div class="chips" id="saved"></div></div>
+      <div class="field"><label>Travelling by</label><div class="seg" id="modes"><button class="on" data-m="walk">Walk</button><button data-m="cycle">Cycle</button><button data-m="scooter">Scooter</button><button data-m="drive">Cab / car</button></div></div>
+      <div class="field"><label>When</label><div class="inrow"><select id="departMode"><option value="now">Leave now</option><option value="later">Pick a time</option></select><input id="departAt" type="datetime-local" hidden></div></div>
+      <div class="field"><label>What matters most</label>
+        <div class="chips" id="presets"><button data-w="65,25,10">Safety first</button><button class="on" data-w="50,35,15">Balanced</button><button data-w="30,55,15">Clean air</button><button data-w="30,20,50">Fastest</button></div>
+        <div style="margin-top:8px;display:grid;gap:2px"><div class="wrow"><span>Safety</span><input type="range" id="wS" min="0" max="100" step="5" value="50"><b id="wSv">50</b></div><div class="wrow"><span>Pollution</span><input type="range" id="wP" min="0" max="100" step="5" value="35"><b id="wPv">35</b></div><div class="wrow"><span>Time</span><input type="range" id="wT" min="0" max="100" step="5" value="15"><b id="wTv">15</b></div></div></div>
+      <label class="switch" style="margin:6px 0 12px"><input type="checkbox" id="useIntel" checked> Use live TinyFish intel (needs TinyFish key)</label>
+      <button class="btn primary block" id="analyze" style="padding:14px;font-size:16px">Compare routes</button>
+      <div id="loading" hidden><div class="stepline" id="stepline">Finding routes…</div><div class="skel"><div></div><div></div><div></div></div></div>
+      <div id="results"></div>
+    </div>
+
+    <div class="pane" id="pane-live" hidden>
+      <div id="liveEmpty"><p class="hint">Compare routes first, then start a live journey on the route you choose. No GPS handy? Use <b>Simulate walk</b> to demo it.</p><button class="btn block" data-tab-go="plan">Go to Plan</button></div>
+      <div id="liveBox" hidden>
+        <div style="display:flex;justify-content:space-between;align-items:center"><div><b id="lvRoute"></b><div class="muted sm" id="lvSub"></div></div><span class="chip" id="lvMode">Idle</span></div>
+        <div class="prog"><span id="lvProg"></span></div>
+        <div class="tiles"><div class="tile" id="tSafety"><span>Safety risk here</span><b id="lvSafety">-</b></div><div class="tile" id="tAir"><span>PM2.5 here (µg/m³)</span><b id="lvAir">-</b></div><div class="tile" id="tRisk"><span>Combined risk</span><b id="lvRisk">-</b></div><div class="tile"><span>Time left</span><b id="lvEta">-</b></div></div>
+        <canvas class="chart" id="lvChart" aria-label="Risk along the route"></canvas>
+        <div class="row2"><button class="btn primary" id="lvStart">Start with GPS</button><button class="btn" id="lvSim">Simulate walk</button><button class="btn" id="lvDetour" hidden>Simulate detour</button><button class="btn" id="lvStop" hidden>Stop</button><button class="btn" id="lvShare">Share live trip</button></div>
+        <div class="ask" id="lvAsk" hidden role="alert"><b>Are you safe?</b><span class="sm">You are off the planned route. An SOS goes out in <b id="askN">10</b> s.</span><div class="row2"><button class="btn primary" id="askOk">I am safe</button><button class="btn danger" id="askSos">Send SOS now</button></div></div>
+        <h3 style="font-size:15px;margin:14px 0 8px">Alerts</h3><ul class="alerts" id="lvAlerts"></ul>
+      </div>
+    </div>
+
+    <div class="pane" id="pane-intel" hidden>
+      <p class="hint"><b>Powered by TinyFish.</b> Search API finds fresh local news and advisories around your start and destination. The Agent API can open any article and extract structured facts.</p>
+      <button class="btn primary block" id="intelScan">Scan this area with TinyFish</button>
+      <div class="sm muted" id="intelStatus" style="margin:10px 0"></div>
+      <div id="intelList"></div>
+    </div>
+
+    <div class="pane" id="pane-report" hidden>
+      <p class="hint">Report a spot that felt unsafe. Reports raise the risk on nearby routes for a few weeks and help others choose better.</p>
+      <div class="field"><label>What happened</label><div class="chips" id="repCats"><button class="on" data-c="poor_lighting">Poor lighting</button><button data-c="harassment">Harassment</button><button data-c="unsafe_crowd">Unsafe crowd</button><button data-c="isolated">Isolated stretch</button><button data-c="road_hazard">Road hazard</button><button data-c="pollution_source">Smoke or dust</button><button data-c="other">Other</button></div></div>
+      <div class="field"><label>How serious</label><div class="seg" id="repSev"><button data-s="1">Minor</button><button class="on" data-s="2">Concerning</button><button data-s="3">Serious</button></div></div>
+      <div class="field"><label for="repNote">Details (optional, no personal names)</label><textarea id="repNote" maxlength="300"></textarea></div>
+      <div class="field"><label>Where</label><div class="row2" style="margin:0"><button class="btn sm" id="repPin">Pick on map</button><button class="btn sm" id="repLoc">Use my location</button></div><div class="sm muted" id="repWhere" style="margin-top:6px">No location chosen yet.</div></div>
+      <button class="btn primary block" id="repSend">Submit report</button>
+    </div>
+
+    <div class="pane" id="pane-settings" hidden>
+      <h3 style="font-size:16px;margin-bottom:6px">API keys</h3>
+      <p class="hint">Keys can live in the server <code>.env</code> file, or be pasted here (saved only in this browser). Pasting here is handy for quick tests.</p>
+      <div class="field"><label for="gKey">Google Maps API key</label><input id="gKey" type="password" placeholder="PASTE YOUR GOOGLE MAPS KEY HERE" autocomplete="off"></div>
+      <div class="field"><label for="tKey">TinyFish API key</label><input id="tKey" type="password" placeholder="PASTE YOUR TINYFISH KEY HERE" autocomplete="off"></div>
+      <div class="row2"><button class="btn primary" id="saveKeys">Save keys and reload</button><button class="btn" id="diagBtn">Test connections</button></div>
+      <div class="diag" id="diagOut"></div>
+      <h3 style="font-size:16px;margin:20px 0 6px">You and your trusted contacts</h3>
+      <div class="field"><label for="cName">Your name (used in SOS messages)</label><input id="cName" type="text" maxlength="30" placeholder="Your name"></div>
+      <div id="contacts"></div>
+      <div class="inrow"><input id="cn" type="text" placeholder="Contact name" maxlength="30"><input id="cp" type="text" placeholder="Phone with country code" maxlength="20"></div>
+      <button class="btn block" id="cAdd" style="margin-top:8px">Add contact</button>
+      <p class="sm muted" style="margin-top:14px">Map engine in use: <b id="mapProv">-</b></p>
+    </div>
+  </aside>
+
+  <section id="mapwrap">
+    <div id="map" aria-label="Map"></div>
+    <div class="mapbar"><button class="btn" id="b3d" hidden>Tilt 3D view</button><button class="btn" id="bLocate">My location</button><button class="btn" id="bSafe">Safe points: on</button></div>
+    <div class="legend"><div class="bar"></div><div class="l"><span>Lower risk</span><span>Higher risk</span></div><div class="l"><span>● Police / hospital / open late</span></div><div class="l"><span style="color:#f2546f">● Community report</span></div></div>
+    <button id="sosFab" aria-label="Send SOS">SOS</button>
+  </section>
+</div>
+
+<div id="modal" hidden></div>
+<div id="toast" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/api.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/maps.js"></script>
+<script src="js/hero3d.js"></script>
+<script src="js/app.js"></script>
+<script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
+</body>
+</html>
